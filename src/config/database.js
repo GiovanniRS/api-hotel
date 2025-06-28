@@ -1,9 +1,27 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: './database.sqlite', // Onde o arquivo do banco de dados será salvo
-    logging: false, // Desabilita logs de SQL no console
-});
+// Use uma variável de ambiente para a string de conexão
+const DATABASE_URL = process.env.DATABASE_URL;
 
-module.exports = sequelize;
+if (!DATABASE_URL) {
+  console.warn("DATABASE_URL não definida. Usando SQLite localmente.");
+  // Conexão SQLite para desenvolvimento local
+  module.exports = new Sequelize({
+    dialect: 'sqlite',
+    storage: 'database.sqlite',
+    logging: false, // Desabilita logs SQL no console
+  });
+} else {
+  // Conexão para PostgreSQL em produção
+  module.exports = new Sequelize(DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+  });
+}
